@@ -1,0 +1,5 @@
+{
+  "name": "React Media Manager",
+  "description": "A simple media management web application for organizing and accessing your files. Features drag and drop uploads, file categorization, and a clean, responsive interface built with React and Tailwind CSS.",
+  "requestFramePermissions": []
+}
