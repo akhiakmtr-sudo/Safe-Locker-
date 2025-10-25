@@ -3,15 +3,15 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
-// IMPORTANT: Replace this with your own Firebase project's configuration.
-// You can find this in your Firebase project settings.
+// IMPORTANT: This configuration is for a demo project.
+// Replace it with your own Firebase project's configuration.
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAe9AC1NwaeksZwu8HTklaET0Zbcmls9sA",
+  authDomain: "react-media-manager.firebaseapp.com",
+  projectId: "react-media-manager",
+  storageBucket: "react-media-manager.appspot.com",
+  messagingSenderId: "983146325185",
+  appId: "1:983146325185:web:948944a00fee461415e040"
 };
 
 // Initialize Firebase
