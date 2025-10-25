@@ -121,3 +121,34 @@ export const ExtensionsIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) =
     <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 1.082a.75.75 0 01-1.082.448l-1.082-.625a.75.75 0 00-.917.118l-.512.512a.75.75 0 01-1.06.028l-1.082-.625a.75.75 0 00-.917.118l-.512.512a.75.75 0 01-1.06.028l-1.082-.625a.75.75 0 00-.917.118l-.512.512a.75.75 0 01-1.06.028l-1.082-.625a.75.75 0 00-.917.118l-1.082.625a.75.75 0 01-1.082-.448L3.75 7.5M12 21.75v-2.625m0 0a4.5 4.5 0 003.182-1.318l2.582-2.583a4.5 4.5 0 000-6.364l-2.582-2.583a4.5 4.5 0 00-6.364 0l-2.582 2.583a4.5 4.5 0 000 6.364l2.582 2.583A4.5 4.5 0 0012 19.125z" />
   </svg>
 );
+
+export const ProfileIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" {...props}>
+        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+    </svg>
+);
+
+export const LogoutIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+  </svg>
+);
+
+export const FolderIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+  </svg>
+);
+
+export const ArrowLeftIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+);
+
+export const SpinnerIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" {...props}>
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+);

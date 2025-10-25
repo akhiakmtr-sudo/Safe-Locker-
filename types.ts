@@ -1,9 +1,9 @@
 export enum FileType {
-  Image = 'Images',
-  Video = 'Videos',
-  Document = 'Documents',
-  Audio = 'Audio',
-  Other = 'Other',
+  Photos = 'Photos',
+  Videos = 'Videos',
+  Document = 'Document',
+  Songs = 'Songs',
+  Others = 'Others',
 }
 
 export interface ManagedFile {

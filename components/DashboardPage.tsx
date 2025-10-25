@@ -1,11 +1,12 @@
+
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { User } from 'firebase/auth';
-import { collection, query, where, getDocs, addDoc, deleteDoc, doc, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../firebase';
 
 import { FileType, ManagedFile } from '../types';
-import { ImageIcon, VideoIcon, DocumentIcon, AudioIcon, OtherIcon, DownloadIcon, DeleteIcon, UploadIcon } from './icons';
+import { ImageIcon, VideoIcon, DocumentIcon, AudioIcon, OtherIcon, DownloadIcon, DeleteIcon, UploadIcon, FolderIcon, ArrowLeftIcon, SpinnerIcon } from './icons';
 
 interface DashboardPageProps {
   user: User;
@@ -13,20 +14,20 @@ interface DashboardPageProps {
 
 const getFileType = (file: File): FileType => {
     const type = file.type;
-    if (type.startsWith('image/')) return FileType.Image;
-    if (type.startsWith('video/')) return FileType.Video;
-    if (type.startsWith('audio/')) return FileType.Audio;
+    if (type.startsWith('image/')) return FileType.Photos;
+    if (type.startsWith('video/')) return FileType.Videos;
+    if (type.startsWith('audio/')) return FileType.Songs;
     if (type === 'application/pdf' || type.startsWith('text/') || type.includes('document')) return FileType.Document;
-    return FileType.Other;
+    return FileType.Others;
 };
 
 const FileIcon: React.FC<{ type: FileType }> = ({ type }) => {
     const iconProps = { className: "w-6 h-6 mr-3 text-gray-500 dark:text-gray-400 flex-shrink-0" };
     switch (type) {
-        case FileType.Image: return <ImageIcon {...iconProps} />;
-        case FileType.Video: return <VideoIcon {...iconProps} />;
+        case FileType.Photos: return <ImageIcon {...iconProps} />;
+        case FileType.Videos: return <VideoIcon {...iconProps} />;
         case FileType.Document: return <DocumentIcon {...iconProps} />;
-        case FileType.Audio: return <AudioIcon {...iconProps} />;
+        case FileType.Songs: return <AudioIcon {...iconProps} />;
         default: return <OtherIcon {...iconProps} />;
     }
 };
@@ -51,12 +52,28 @@ const FileItem: React.FC<{ file: ManagedFile, onDelete: (file: ManagedFile) => v
     </div>
 );
 
+const FolderItem: React.FC<{ category: FileType; count: number; icon: React.ReactNode; onClick: () => void; }> = ({ category, count, icon, onClick }) => (
+    <div onClick={onClick} className="flex flex-col items-center justify-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer">
+        <div className="text-indigo-500 dark:text-indigo-400 mb-3">{icon}</div>
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{category}</h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{count} item{count !== 1 ? 's' : ''}</p>
+    </div>
+);
+
+const categoryIcons: Record<FileType, React.ReactNode> = {
+    [FileType.Photos]: <ImageIcon className="w-12 h-12" />,
+    [FileType.Videos]: <VideoIcon className="w-12 h-12" />,
+    [FileType.Document]: <DocumentIcon className="w-12 h-12" />,
+    [FileType.Songs]: <AudioIcon className="w-12 h-12" />,
+    [FileType.Others]: <FolderIcon className="w-12 h-12" />,
+};
 
 const DashboardPage: React.FC<DashboardPageProps> = ({ user }) => {
   const [files, setFiles] = useState<ManagedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [uploadingFiles, setUploadingFiles] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<FileType | null>(null);
 
   const filesCollectionRef = useMemo(() => collection(db, 'files'), []);
 
@@ -64,12 +81,14 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ user }) => {
     if (!user) return;
     setIsLoading(true);
     try {
-      const q = query(filesCollectionRef, where("userId", "==", user.uid), orderBy("name"));
+      const q = query(filesCollectionRef, where("userId", "==", user.uid));
       const querySnapshot = await getDocs(q);
       const userFiles = querySnapshot.docs.map(doc => ({
         ...(doc.data() as Omit<ManagedFile, 'id'>),
         id: doc.id
       }));
+      // Sort files client-side to avoid needing a composite index in Firestore
+      userFiles.sort((a, b) => a.name.localeCompare(b.name));
       setFiles(userFiles);
     } catch (error) {
       console.error("Error fetching files:", error);
@@ -159,8 +178,38 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ user }) => {
     }, {} as Record<FileType, ManagedFile[]>);
   }, [files]);
   
-  const fileCategories = Object.values(FileType);
-  const hasFiles = files.length > 0;
+  const folderCategories = Object.values(FileType);
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-full"><p className="text-center text-gray-600 dark:text-gray-400">Loading your files...</p></div>;
+  }
+  
+  if (selectedCategory) {
+    const filesInCategory = groupedFiles[selectedCategory] || [];
+    return (
+        <main className="p-4 sm:p-6 lg:p-8">
+            <div className="flex items-center mb-6">
+                <button onClick={() => setSelectedCategory(null)} className="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors -ml-2">
+                    <ArrowLeftIcon className="w-6 h-6 text-gray-600 dark:text-gray-300" />
+                </button>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 ml-2">{selectedCategory}</h2>
+            </div>
+            {filesInCategory.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filesInCategory.map(file => (
+                        <FileItem key={file.id} file={file} onDelete={handleDeleteFile} />
+                    ))}
+                </div>
+            ) : (
+                <div className="text-center py-16">
+                    <FolderIcon className="mx-auto w-16 h-16 text-gray-400 dark:text-gray-500" />
+                    <h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-gray-200">This folder is empty</h3>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Upload some files to see them here.</p>
+                </div>
+            )}
+        </main>
+    )
+  }
 
   return (
     <main className="p-4 sm:p-6 lg:p-8">
@@ -187,33 +236,28 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ user }) => {
                 <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">Uploading...</h2>
                 <div className="space-y-2">
                     {uploadingFiles.map(name => (
-                        <div key={name} className="flex items-center p-3 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse">
+                        <div key={name} className="flex items-center justify-between p-3 bg-gray-200 dark:bg-gray-700 rounded-lg">
                             <span className="font-medium text-gray-800 dark:text-gray-200 truncate">{name}</span>
+                            <SpinnerIcon className="text-gray-500 dark:text-gray-400" />
                         </div>
                     ))}
                 </div>
             </div>
         )}
 
-        <div className="mt-8 space-y-8">
-            {isLoading ? (
-                <p className="text-center text-gray-600 dark:text-gray-400">Loading your files...</p>
-            ) : !hasFiles && uploadingFiles.length === 0 ? (
-                <p className="text-center text-gray-600 dark:text-gray-400 py-8">No files yet. Drag and drop to upload!</p>
-            ) : (
-                fileCategories.map(category => (
-                    groupedFiles[category] && groupedFiles[category].length > 0 && (
-                        <section key={category}>
-                            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">{category}</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {groupedFiles[category].map(file => (
-                                    <FileItem key={file.id} file={file} onDelete={handleDeleteFile} />
-                                ))}
-                            </div>
-                        </section>
-                    )
-                ))
-            )}
+        <div className="mt-8">
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">Folders</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                {folderCategories.map(category => (
+                    <FolderItem
+                        key={category}
+                        category={category}
+                        count={groupedFiles[category]?.length || 0}
+                        icon={categoryIcons[category]}
+                        onClick={() => setSelectedCategory(category)}
+                    />
+                ))}
+            </div>
         </div>
       </main>
   );
